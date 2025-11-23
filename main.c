@@ -73,6 +73,13 @@ void train_neural_net() {
         exit(-1);
     }
 
+    // Copiem la matriu d'entrada input a la gpu 
+    #pragma acc enter data copyin(input[0:num_training_patterns])
+
+    for (int i = 0; i < num_training_patterns; i++) {
+        #pragma acc enter data copyin(input[i][0:num_neurons[0]]) 
+    }
+
     int ranpat[num_training_patterns];
 
     // Gradient Descent
@@ -143,6 +150,23 @@ int main(int argc, char** argv) {
         exit(0);
     }
 
+    // Copiem a la GPU les dades de la xarxa neuronal
+    #pragma acc enter data copyin(num_neurons[0:num_layers])
+    #pragma acc enter data copyin(lay[0:num_layers])
+
+    for (int i = 0; i < num_layers; i++) {
+        #pragma acc enter data copyin(lay[i].actv[0:num_neurons[i]])
+        #pragma acc enter data copyin(lay[i].z[0:num_neurons[i]])
+        #pragma acc enter data copyin(lay[i].dz[0:num_neurons[i]])
+        #pragma acc enter data copyin(lay[i].bias[0:num_neurons[i]])
+        #pragma acc enter data copyin(lay[i].dbias[0:num_neurons[i]])
+        #pragma acc enter data copyin(lay[i].dactv[0:num_neurons[i]])
+        if (i < num_layers - 1){
+            #pragma acc enter data copyin(lay[i].out_weights[0:(num_neurons[i]*num_neurons[i+1])])
+            #pragma acc enter data copyin(lay[i].dw[0:(num_neurons[i]*num_neurons[i+1])])
+        }
+    }
+
     if (debug == 1)
         printf("COST MALLOC \n");
 
@@ -154,6 +178,20 @@ int main(int argc, char** argv) {
 
     // Train
     train_neural_net();
+
+    #pragma acc update host(lay[0:num_layers])
+
+    for (int i = 0; i < num_layers; i++) {
+        #pragma acc update host(lay[i].actv[0:num_neurons[i]])
+        #pragma acc update host(lay[i].z[0:num_neurons[i]])
+        #pragma acc update host(lay[i].dz[0:num_neurons[i]])
+        #pragma acc update host(lay[i].bias[0:num_neurons[i]])
+        #pragma acc update host(lay[i].dbias[0:num_neurons[i]])
+        #pragma acc update host(lay[i].dactv[0:num_neurons[i]])
+        if (i < num_layers - 1){
+            #pragma acc update host(lay[i].out_weights[0:(num_neurons[i]*num_neurons[i+1])])
+        }
+    }
 
     // Test
     test_nn();
@@ -173,3 +211,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+

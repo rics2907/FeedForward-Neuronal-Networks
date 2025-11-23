@@ -51,7 +51,7 @@ int create_architecture() {
     for (int i = 0; i < num_layers; i++)
         lay[i] = create_layer(num_neurons[i],
                               (i < (num_layers - 1)) ? num_neurons[i + 1] : 0);
-
+            
     // Initialize the weights
     if (initialize_weights() != SUCCESS_INIT_WEIGHTS) {
         printf("Error Initilizing weights...\n");

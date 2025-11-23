@@ -124,3 +124,4 @@ void readConfiguration(char* configfile) {
     if (debug == 1)
         printConfiguration();
 }
+

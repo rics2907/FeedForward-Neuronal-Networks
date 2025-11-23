@@ -13,7 +13,7 @@
  */
 
 #include "training.h"
-
+#include <openacc.h>
 #include <math.h>
 
 /**
@@ -23,6 +23,7 @@
  * @param i Índex de l'element del conjunt d'entrenament que farem servir.
  **/
 void feed_input(int i) {
+    #pragma acc parallel loop present(input, lay, num_neurons)
     for (int j = 0; j < num_neurons[0]; j++)
         lay[0].actv[j] = input[i][j];
 }
@@ -48,7 +49,7 @@ void feed_input(int i) {
  */
 void forward_prop() {
     for (int i = 1; i < num_layers; i++) {
-        #pragma omp parallel for schedule(static)    
+        #pragma acc parallel loop present(lay, num_neurons)
         for (int j = 0; j < num_neurons[i]; j++) {
             lay[i].z[j] = lay[i].bias[j];
             for (int k = 0; k < num_neurons[i - 1]; k++)
@@ -104,8 +105,13 @@ void back_prop(int p) {
         }
     }
 
+    #pragma acc update device(lay[num_layers - 1].dz[0:num_neurons[num_layers - 1]])
+    #pragma acc update device(lay[num_layers - 1].dbias[0:num_neurons[num_layers - 1]])
+    #pragma acc update device(lay[num_layers - 2].dw[0:num_neurons[num_layers - 1] * num_neurons[num_layers - 2]])
+    #pragma acc update device(lay[num_layers - 2].dactv[0:num_neurons[num_layers - 2]])
+
     // Hidden Layers
-    #pragma omp parallel for schedule(static)
+    #pragma acc parallel loop present(lay, num_neurons)
     for (int i = num_layers - 2; i > 0; i--) {
         for (int j = 0; j < num_neurons[i]; j++) {
             lay[i].dz[j] = (lay[i].z[j] >= 0) ? lay[i].dactv[j] : 0;
@@ -133,7 +139,7 @@ void back_prop(int p) {
  */
 void update_weights(void) {
 
-    #pragma omp parallel for schedule(static)
+    #pragma acc parallel loop present(lay, num_neurons)
     for (int i = 0; i < num_layers - 1; i++) {
         for (int j = 0; j < num_neurons[i + 1]; j++)
             for (int k = 0; k < num_neurons[i]; k++)  // Update Weights

@@ -1,0 +1,138 @@
+main.c:
+freeInput:
+     26, Loop not vectorized/parallelized: contains call
+printRecognized:
+     45, Loop not vectorized/parallelized: contains call
+train_neural_net:
+     74, Generating enter data copyin(input[:num_training_patterns])
+     79, Loop not vectorized/parallelized: contains call
+     81, Generating enter data copyin(input[i][:num_neurons->])
+     88, Generated vector simd code for the loop
+     91, Loop not vectorized/parallelized: contains call
+     99, Loop not vectorized/parallelized: contains call
+    108, freeInput inlined, size=5 (inline) file main.c (25)
+          26, Loop not vectorized/parallelized: contains call
+test_nn:
+    124, Loop not vectorized: data dependency
+         Loop unrolled 4 times
+    128, printRecognized inlined, size=17 (inline) file main.c (32)
+          45, Loop not vectorized/parallelized: contains call
+    132, freeInput inlined, size=5 (inline) file main.c (25)
+          26, Loop not vectorized/parallelized: contains call
+main:
+    151, Generating enter data copyin(num_neurons[:num_layers])
+         Generating enter data create(lay[:num_layers])
+    157, Loop not vectorized/parallelized: contains call
+    165, Generating enter data create(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->],lay->bias[:num_neurons->],lay->z[:num_neurons->])
+    168, Generating enter data create(lay->out_weights[:num_neurons->*num_neurons->],lay->dw[:num_neurons->*num_neurons->])
+    172, Loop not vectorized/parallelized: contains call
+    180, Generating update device(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->],lay->bias[:num_neurons->],lay->z[:num_neurons->])
+    183, Generating update device(lay->out_weights[:num_neurons->*num_neurons->],lay->dw[:num_neurons->*num_neurons->])
+    197, Generating update self(lay[:num_layers])
+    201, Loop not vectorized/parallelized: contains call
+    208, Generating update self(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->],lay->bias[:num_neurons->],lay->z[:num_neurons->])
+    210, Generating update self(lay->out_weights[:num_neurons->*num_neurons->])
+    214, test_nn inlined, size=45 (inline) file main.c (112)
+         124, Loop not vectorized: data dependency
+              Loop unrolled 4 times
+         128, printRecognized inlined, size=17 (inline) file main.c (32)
+         128, Loop not vectorized/parallelized: contains call
+         132, Loop not vectorized/parallelized: contains call
+common/common.c:
+readImg:
+     37, Loop not vectorized/parallelized: not countable
+loadPatternSet:
+     55, readImg inlined, size=14 (inline) file common/common.c (27)
+          37, Loop not vectorized/parallelized: not countable
+printImg:
+     77, Loop not vectorized/parallelized: contains call
+     83, Loop not vectorized/parallelized: contains call
+configuration/config.c:
+printConfiguration:
+     48, Loop not vectorized/parallelized: contains call
+     57, Loop not vectorized/parallelized: contains call
+readConfiguration:
+     70, checkError inlined, size=6 (inline) file configuration/config.c (36)
+     73, checkError inlined, size=6 (inline) file configuration/config.c (36)
+     76, checkError inlined, size=6 (inline) file configuration/config.c (36)
+     78, Loop not vectorized/parallelized: contains call
+     80, checkError inlined, size=6 (inline) file configuration/config.c (36)
+     86, checkError inlined, size=6 (inline) file configuration/config.c (36)
+     89, checkError inlined, size=6 (inline) file configuration/config.c (36)
+     92, Loop not vectorized/parallelized: contains call
+     98, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    101, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    104, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    107, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    110, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    113, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    116, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    119, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    122, checkError inlined, size=6 (inline) file configuration/config.c (36)
+    125, printConfiguration inlined, size=22 (inline) file configuration/config.c (46)
+          48, Loop not vectorized/parallelized: contains call
+          57, Loop not vectorized/parallelized: contains call
+layer/layer.c:
+randomizer/randomizer.c:
+initialize/initialize.c:
+init:
+     26, create_architecture inlined, size=58 (inline) file initialize/initialize.c (48)
+          51, Loop not vectorized/parallelized: contains structure move
+          56, initialize_weights inlined, size=38 (inline) file initialize/initialize.c (65)
+          56, Loop not vectorized/parallelized: contains call
+dinit:
+     36, Loop not vectorized/parallelized: contains call
+     39, Loop not vectorized/parallelized: contains call
+create_architecture:
+     51, Loop not vectorized/parallelized: contains structure move
+     56, initialize_weights inlined, size=38 (inline) file initialize/initialize.c (65)
+          73, Loop not vectorized/parallelized: contains call
+          88, Loop not vectorized/parallelized: contains call
+initialize_weights:
+     73, Loop not vectorized/parallelized: contains call
+     88, Loop not vectorized/parallelized: contains call
+training/training.c:
+feed_input:
+     25, Generating present(input[:1],num_neurons[:1],lay[:1])
+         Generating Tesla code
+         27, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
+forward_prop:
+     51, Generating present(num_neurons[:1],lay[:1])
+         Generating Tesla code
+         53, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
+         55, #pragma acc loop seq
+     51, Loop not vectorized/parallelized: contains call
+     55, Complex loop carried dependence of lay->z-> prevents parallelization
+         Loop carried dependence of lay->z-> prevents parallelization
+         Loop carried backward dependence of lay->z-> prevents vectorization
+back_prop:
+     90, Loop not vectorized: data dependency
+         Loop unrolled 4 times
+     98, Loop not vectorized: data dependency
+         Loop unrolled 4 times
+    106, Generating update device(lay->dz[:num_neurons->],lay->dw[:num_neurons->*num_neurons->],lay->dactv[:num_neurons->],lay->dbias[:num_neurons->])
+         Generating present(num_neurons[:1],lay[:1])
+         Generating Tesla code
+        115, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
+        116, #pragma acc loop seq
+        119, #pragma acc loop seq
+    116, Loop carried dependence of lay->actv-> prevents parallelization
+         Loop carried backward dependence of lay->actv-> prevents vectorization
+         Loop carried dependence of lay->dw-> prevents vectorization
+    119, Complex loop carried dependence of lay->dw->,lay->actv-> prevents parallelization
+         Loop carried dependence of lay->dw-> prevents parallelization
+         Loop carried backward dependence of lay->dw-> prevents vectorization
+         Complex loop carried dependence of lay->out_weights-> prevents parallelization
+update_weights:
+    140, Generating present(num_neurons[:1],lay[:1])
+         Generating Tesla code
+        143, #pragma acc loop gang /* blockIdx.x */
+        144, #pragma acc loop seq
+        145, #pragma acc loop seq
+        150, #pragma acc loop vector(128) /* threadIdx.x */
+    144, Loop carried dependence of lay->out_weights->,lay->dw-> prevents parallelization
+         Loop carried backward dependence of lay->out_weights->,lay->dw-> prevents vectorization
+    145, Complex loop carried dependence of lay->out_weights->,lay->dw-> prevents parallelization
+         Loop carried dependence of lay->out_weights-> prevents parallelization
+         Loop carried backward dependence of lay->out_weights-> prevents vectorization
+    150, Loop is parallelizable
