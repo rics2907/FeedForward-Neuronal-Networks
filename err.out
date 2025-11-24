@@ -4,40 +4,43 @@ freeInput:
 printRecognized:
      45, Loop not vectorized/parallelized: contains call
 train_neural_net:
-     74, Generating enter data copyin(input[:num_training_patterns])
-     79, Loop not vectorized/parallelized: contains call
-     81, Generating enter data copyin(input[i][:num_neurons->])
-     88, Generated vector simd code for the loop
-     91, Loop not vectorized/parallelized: contains call
-     99, Loop not vectorized/parallelized: contains call
-    108, freeInput inlined, size=5 (inline) file main.c (25)
+     78, Generating enter data copyin(input[:num_training_patterns])
+     81, Loop not vectorized/parallelized: contains call
+     83, Generating enter data copyin(input[i][:num_neurons->])
+     97, Generated vector simd code for the loop
+    100, Loop not vectorized/parallelized: contains call
+    108, Loop not vectorized/parallelized: contains call
+    125, freeInput inlined, size=5 (inline) file main.c (25)
           26, Loop not vectorized/parallelized: contains call
 test_nn:
-    124, Loop not vectorized: data dependency
+    141, Loop not vectorized: data dependency
          Loop unrolled 4 times
-    128, printRecognized inlined, size=17 (inline) file main.c (32)
+    146, printRecognized inlined, size=17 (inline) file main.c (32)
           45, Loop not vectorized/parallelized: contains call
-    132, freeInput inlined, size=5 (inline) file main.c (25)
+    151, freeInput inlined, size=5 (inline) file main.c (25)
           26, Loop not vectorized/parallelized: contains call
 main:
-    151, Generating enter data copyin(num_neurons[:num_layers])
-         Generating enter data create(lay[:num_layers])
-    157, Loop not vectorized/parallelized: contains call
-    165, Generating enter data create(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->],lay->bias[:num_neurons->],lay->z[:num_neurons->])
-    168, Generating enter data create(lay->out_weights[:num_neurons->*num_neurons->],lay->dw[:num_neurons->*num_neurons->])
-    172, Loop not vectorized/parallelized: contains call
-    180, Generating update device(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->],lay->bias[:num_neurons->],lay->z[:num_neurons->])
-    183, Generating update device(lay->out_weights[:num_neurons->*num_neurons->],lay->dw[:num_neurons->*num_neurons->])
-    197, Generating update self(lay[:num_layers])
-    201, Loop not vectorized/parallelized: contains call
-    208, Generating update self(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->],lay->bias[:num_neurons->],lay->z[:num_neurons->])
-    210, Generating update self(lay->out_weights[:num_neurons->*num_neurons->])
-    214, test_nn inlined, size=45 (inline) file main.c (112)
-         124, Loop not vectorized: data dependency
+    179, Generating enter data copyin(num_neurons[:num_layers],lay[:num_layers])
+    182, Loop not vectorized/parallelized: contains call
+    191, Generating enter data create(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->])
+         Generating enter data copyin(lay->bias[:num_neurons->])
+         Generating enter data create(lay->z[:num_neurons->])
+    194, Generating enter data create(lay->dw[:num_neurons->*num_neurons->])
+         Generating enter data copyin(lay->out_weights[:num_neurons->*num_neurons->])
+    201, Generating enter data copyin(input[:num_training_patterns])
+    204, Loop not vectorized/parallelized: contains call
+    206, Generating enter data copyin(input[i][:num_neurons->])
+    223, Generated vector simd code for the loop containing reductions
+    234, Loop not vectorized/parallelized: contains call
+    236, Generating update self(lay->bias[:num_neurons->])
+    238, Generating update self(lay->out_weights[:num_neurons->*num_neurons->])
+    244, Generated vector simd code for the loop containing reductions
+    250, test_nn inlined, size=45 (inline) file main.c (130)
+         141, Loop not vectorized: data dependency
               Loop unrolled 4 times
-         128, printRecognized inlined, size=17 (inline) file main.c (32)
-         128, Loop not vectorized/parallelized: contains call
-         132, Loop not vectorized/parallelized: contains call
+         146, printRecognized inlined, size=17 (inline) file main.c (32)
+         146, Loop not vectorized/parallelized: contains call
+         151, Loop not vectorized/parallelized: contains call
 common/common.c:
 readImg:
      37, Loop not vectorized/parallelized: not countable
@@ -106,33 +109,34 @@ forward_prop:
          Loop carried dependence of lay->z-> prevents parallelization
          Loop carried backward dependence of lay->z-> prevents vectorization
 back_prop:
-     90, Loop not vectorized: data dependency
+     88, Generating update self(lay->actv[:num_neurons->],lay->out_weights[:num_neurons->*num_neurons->])
+     95, Loop not vectorized: data dependency
          Loop unrolled 4 times
-     98, Loop not vectorized: data dependency
+    103, Loop not vectorized: data dependency
          Loop unrolled 4 times
-    106, Generating update device(lay->dz[:num_neurons->],lay->dw[:num_neurons->*num_neurons->],lay->dactv[:num_neurons->],lay->dbias[:num_neurons->])
-         Generating present(num_neurons[:1],lay[:1])
+    111, Generating update device(lay->dz[:num_neurons->],lay->dw[:num_neurons->*num_neurons->],lay->dactv[:num_neurons->],lay->dbias[:num_neurons->])
+    119, Generating present(num_neurons[:1],lay[:1])
          Generating Tesla code
-        115, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-        116, #pragma acc loop seq
-        119, #pragma acc loop seq
-    116, Loop carried dependence of lay->actv-> prevents parallelization
-         Loop carried backward dependence of lay->actv-> prevents vectorization
-         Loop carried dependence of lay->dw-> prevents vectorization
-    119, Complex loop carried dependence of lay->dw->,lay->actv-> prevents parallelization
+        121, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
+        124, #pragma acc loop seq
+    119, Loop not vectorized/parallelized: contains call
+    124, Complex loop carried dependence of lay->dw->,lay->actv-> prevents parallelization
          Loop carried dependence of lay->dw-> prevents parallelization
          Loop carried backward dependence of lay->dw-> prevents vectorization
          Complex loop carried dependence of lay->out_weights-> prevents parallelization
 update_weights:
-    140, Generating present(num_neurons[:1],lay[:1])
+    145, Generating present(num_neurons[:1],lay[:1])
          Generating Tesla code
-        143, #pragma acc loop gang /* blockIdx.x */
-        144, #pragma acc loop seq
-        145, #pragma acc loop seq
-        150, #pragma acc loop vector(128) /* threadIdx.x */
-    144, Loop carried dependence of lay->out_weights->,lay->dw-> prevents parallelization
+        148, #pragma acc loop gang /* blockIdx.x */
+        149, #pragma acc loop seq
+        150, #pragma acc loop seq
+        155, #pragma acc loop vector(128) /* threadIdx.x */
+    149, Loop carried dependence of lay->out_weights->,lay->dw-> prevents parallelization
          Loop carried backward dependence of lay->out_weights->,lay->dw-> prevents vectorization
-    145, Complex loop carried dependence of lay->out_weights->,lay->dw-> prevents parallelization
+    150, Complex loop carried dependence of lay->out_weights->,lay->dw-> prevents parallelization
          Loop carried dependence of lay->out_weights-> prevents parallelization
          Loop carried backward dependence of lay->out_weights-> prevents vectorization
-    150, Loop is parallelizable
+    155, Loop is parallelizable
+WARNING: exec and any of its children processes will be profiled.
+
+Collecting data...

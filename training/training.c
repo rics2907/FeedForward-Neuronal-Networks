@@ -23,7 +23,7 @@
  * @param i Índex de l'element del conjunt d'entrenament que farem servir.
  **/
 void feed_input(int i) {
-    #pragma acc parallel loop present(input, lay, num_neurons)
+    #pragma acc parallel loop present(lay, num_neurons, input)
     for (int j = 0; j < num_neurons[0]; j++)
         lay[0].actv[j] = input[i][j];
 }
@@ -86,7 +86,12 @@ void forward_prop() {
  *
  */
 void back_prop(int p) {
+
     // Output Layer
+    #pragma acc update host(lay[num_layers-1].actv[0:num_neurons[num_layers-1]])
+    #pragma acc update host(lay[num_layers-2].actv[0:num_neurons[num_layers-2]])
+    #pragma acc update host(lay[num_layers-2].out_weights[0:num_neurons[num_layers-1]*num_neurons[num_layers-2]])
+
     for (int j = 0; j < num_neurons[num_layers - 1]; j++) {
         lay[num_layers - 1].dz[j] =
             (lay[num_layers - 1].actv[j] - desired_outputs[p][j]) *
@@ -104,10 +109,10 @@ void back_prop(int p) {
                 lay[num_layers - 1].dz[j];
         }
     }
-
+    
     #pragma acc update device(lay[num_layers - 1].dz[0:num_neurons[num_layers - 1]])
     #pragma acc update device(lay[num_layers - 1].dbias[0:num_neurons[num_layers - 1]])
-    #pragma acc update device(lay[num_layers - 2].dw[0:num_neurons[num_layers - 1] * num_neurons[num_layers - 2]])
+    #pragma acc update device(lay[num_layers - 2].dw[0:num_neurons[num_layers - 1]*num_neurons[num_layers - 2]])
     #pragma acc update device(lay[num_layers - 2].dactv[0:num_neurons[num_layers - 2]])
 
     // Hidden Layers
@@ -138,7 +143,7 @@ void back_prop(int p) {
  * @see back_prop
  */
 void update_weights(void) {
-
+    
     #pragma acc parallel loop present(lay, num_neurons)
     for (int i = 0; i < num_layers - 1; i++) {
         for (int j = 0; j < num_neurons[i + 1]; j++)

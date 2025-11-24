@@ -1,6 +1,6 @@
 num_layers=3
 layer=1024
-layer=135
+layer=2048
 layer=10
 num_training_patterns=1934
 num_test_patterns=946
