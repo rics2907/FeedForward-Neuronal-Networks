@@ -7,8 +7,8 @@
 #SBATCH --partition=cuda-ext.q
 ## GPUs are available on aolin cluster
 #SBATCH --gres=gpu:GeForceRTX3080:1
-#SBATCH -o out.out
-#SBATCH -e err.out
+#SBATCH -o out-%j.out
+#SBATCH -e err-%j.out
 
 
 module load nvhpc/21.2
@@ -17,7 +17,7 @@ nvidia-smi
 #gcc -Ofast main.c common/common.c configuration/config.c layer/layer.c randomizer/randomizer.c initialize/initialize.c training/training.c -o exec -lm 
 nvc -O3 -acc=gpu -Minfo=all main.c common/common.c configuration/config.c layer/layer.c randomizer/randomizer.c initialize/initialize.c training/training.c -o exec
 
-# ./exec
+#./exec
 
 # Profiling:
 nsys nvprof --print-gpu-trace ./exec #summary 
@@ -30,3 +30,5 @@ nsys nvprof --print-gpu-trace ./exec #summary
 # Profile traces with nsys 
 #nsys profile -f true -t nvtx,cuda -o profile.nsys-rep ./exec
 # Download "profile.nsys-rep.qdrep" on your computer and use nsys to open the file.
+
+rm exec

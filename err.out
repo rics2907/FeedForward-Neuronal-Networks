@@ -1,144 +1,0 @@
-main.c:
-freeInput:
-     25, Loop not vectorized/parallelized: contains call
-printRecognized:
-     44, Loop not vectorized/parallelized: contains call
-train_neural_net:
-     79, Generating enter data copyin(input[:num_training_patterns][:num_neurons->],desired_outputs[:num_training_patterns][:num_neurons->])
-     90, Generated vector simd code for the loop
-     93, Loop not vectorized/parallelized: contains call
-    101, Loop not vectorized/parallelized: contains call
-    118, freeInput inlined, size=5 (inline) file main.c (24)
-          25, Loop not vectorized/parallelized: contains call
-test_nn:
-    134, Loop not vectorized: data dependency
-         Loop unrolled 4 times
-    139, Generating update device(lay->actv[:num_neurons->])
-    143, printRecognized inlined, size=17 (inline) file main.c (31)
-          44, Loop not vectorized/parallelized: contains call
-    143, Generating update self(lay->actv[:num_neurons->])
-    150, freeInput inlined, size=5 (inline) file main.c (24)
-          25, Loop not vectorized/parallelized: contains call
-main:
-    172, Generating enter data copyin(lay[:num_layers],num_neurons[:num_layers],num_layers,alpha)
-    182, Loop not vectorized/parallelized: contains call
-    191, Generating enter data copyin(lay->dz[:num_neurons->],lay->dbias[:num_neurons->],lay->actv[:num_neurons->],lay->dactv[:num_neurons->],lay->bias[:num_neurons->],lay->z[:num_neurons->])
-    194, Generating enter data copyin(lay->out_weights[:num_neurons->*num_neurons->],lay->dw[:num_neurons->*num_neurons->])
-common/common.c:
-readImg:
-     37, Loop not vectorized/parallelized: not countable
-loadPatternSet:
-     55, readImg inlined, size=14 (inline) file common/common.c (27)
-          37, Loop not vectorized/parallelized: not countable
-printImg:
-     77, Loop not vectorized/parallelized: contains call
-     83, Loop not vectorized/parallelized: contains call
-configuration/config.c:
-printConfiguration:
-     48, Loop not vectorized/parallelized: contains call
-     57, Loop not vectorized/parallelized: contains call
-readConfiguration:
-     70, checkError inlined, size=6 (inline) file configuration/config.c (36)
-     73, checkError inlined, size=6 (inline) file configuration/config.c (36)
-     76, checkError inlined, size=6 (inline) file configuration/config.c (36)
-     78, Loop not vectorized/parallelized: contains call
-     80, checkError inlined, size=6 (inline) file configuration/config.c (36)
-     86, checkError inlined, size=6 (inline) file configuration/config.c (36)
-     89, checkError inlined, size=6 (inline) file configuration/config.c (36)
-     92, Loop not vectorized/parallelized: contains call
-     98, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    101, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    104, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    107, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    110, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    113, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    116, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    119, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    122, checkError inlined, size=6 (inline) file configuration/config.c (36)
-    125, printConfiguration inlined, size=22 (inline) file configuration/config.c (46)
-          48, Loop not vectorized/parallelized: contains call
-          57, Loop not vectorized/parallelized: contains call
-layer/layer.c:
-randomizer/randomizer.c:
-initialize/initialize.c:
-init:
-     26, create_architecture inlined, size=58 (inline) file initialize/initialize.c (48)
-          51, Loop not vectorized/parallelized: contains structure move
-          56, initialize_weights inlined, size=38 (inline) file initialize/initialize.c (65)
-          56, Loop not vectorized/parallelized: contains call
-dinit:
-     36, Loop not vectorized/parallelized: contains call
-     39, Loop not vectorized/parallelized: contains call
-create_architecture:
-     51, Loop not vectorized/parallelized: contains structure move
-     56, initialize_weights inlined, size=38 (inline) file initialize/initialize.c (65)
-          73, Loop not vectorized/parallelized: contains call
-          88, Loop not vectorized/parallelized: contains call
-initialize_weights:
-     73, Loop not vectorized/parallelized: contains call
-     88, Loop not vectorized/parallelized: contains call
-training/training.c:
-feed_input:
-     25, Generating present(lay[:1],input[:1])
-         Generating Tesla code
-         27, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-     25, Generating implicit copyin(num_neurons[:1]) [if not already present]
-forward_prop:
-     52, Generating present(num_neurons[:1],lay[:1])
-         Generating Tesla code
-         54, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-         56, #pragma acc loop seq
-     52, Loop not vectorized/parallelized: contains call
-     56, Complex loop carried dependence of lay->z-> prevents parallelization
-         Loop carried dependence of lay->z-> prevents parallelization
-         Loop carried backward dependence of lay->z-> prevents vectorization
-back_prop:
-     92, Generating present(desired_outputs[:1],num_neurons[:1],lay[:1])
-     94, Generating Tesla code
-         97, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-        104, #pragma acc loop seq
-        106, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-        117, #pragma acc loop seq
-        119, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-        122, #pragma acc loop seq
-    104, Loop carried dependence due to exposed use of lay[num_layers-2:2] prevents parallelization
-    117, Loop carried dependence of lay->actv-> prevents parallelization
-         Loop carried dependence of lay->actv-> prevents vectorization
-         Loop carried backward dependence of lay->actv-> prevents vectorization
-         Loop carried dependence of lay->dw-> prevents parallelization
-         Loop carried dependence of lay->dw-> prevents vectorization
-         Loop carried backward dependence of lay->dw-> prevents vectorization
-         Loop carried dependence of lay->out_weights-> prevents parallelization
-         Loop carried dependence of lay->out_weights-> prevents vectorization
-         Loop carried backward dependence of lay->out_weights-> prevents vectorization
-         Loop carried dependence of lay->dactv-> prevents parallelization
-         Loop carried dependence of lay->dactv-> prevents vectorization
-         Loop carried backward dependence of lay->dactv-> prevents vectorization
-    122, Complex loop carried dependence of lay->dw->,lay->actv-> prevents parallelization
-         Loop carried dependence of lay->dw-> prevents parallelization
-         Loop carried backward dependence of lay->dw-> prevents vectorization
-         Complex loop carried dependence of lay->out_weights-> prevents parallelization
-update_weights:
-    151, Generating present(alpha,num_neurons[:1],lay[:1])
-         Generating Tesla code
-        152, #pragma acc loop seq
-        154, #pragma acc loop gang, vector(128) collapse(2) /* blockIdx.x threadIdx.x */
-        155,   /* blockIdx.x threadIdx.x collapsed */
-        161, #pragma acc loop gang, vector(128) /* blockIdx.x threadIdx.x */
-    152, Loop is parallelizable
-WARNING: exec and any of its children processes will be profiled.
-
-Collecting data...
-Processing events...
-Saving temporary "/tmp/nsys-report-f44f-acd9-d848-05b6.qdstrm" file to disk...
-
-Creating final output files...
-Processing [0%                                                                ]Processing [1%                                                                ]Processing [0%                                                                ]Processing [3%                                                                ]Processing [=6%                                                               ]Processing [=5%                                                               ]Processing [==7%                                                              ]Processing [=6%                                                               ]Processing [=5%                                                               ]Processing [==7%                                                              ]Processing [=6%                                                               ]Processing [=5%                                                               ]Processing [==7%                                                              ]Processing [=6%                                                               ]Processing [==7%                                                              ]Processing [=6%                                                               ]Processing [=5%                                                               ]Processing [=6%                                                               ]Processing [==7%                                                              ]Processing [===8%                                                             ]Processing [===9%                                                             ]Processing [===10%                                                            ]Processing [===9%                                                             ]Processing [===8%                                                             ]Processing [===9%                                                             ]Processing [===8%                                                             ]Processing [===9%                                                             ]Processing [===8%                                                             ]Processing [===9%                                                             ]Processing [===8%                                                             ]Processing [==7%                                                              ]Processing [===8%                                                             ]Processing [===9%                                                             ]Processing [===10%                                                            ]Processing [====11%                                                           ]Processing [====12%                                                           ]Processing [=====13%                                                          ]Processing [======14%                                                         ]Processing [======15%                                                         ]Processing [=======16%                                                        ]Processing [========17%                                                       ]Processing [========18%                                                       ]Processing [=========19%                                                      ]Processing [==========20%                                                     ]Processing [==========21%                                                     ]Processing [===========22%                                                    ]Processing [============23%                                                   ]Processing [============24%                                                   ]Processing [=============25%                                                  ]Processing [==============26%                                                 ]Processing [==============27%                                                 ]Processing [===============28%                                                ]Processing [================29%                                               ]Processing [================30%                                               ]Processing [=================31%                                              ]Processing [==================32%                                             ]Processing [==================33%                                             ]Processing [===================34%                                            ]Processing [====================35%                                           ]Processing [====================36%                                           ]Processing [=====================37%                                          ]Processing [======================38%                                         ]Processing [======================39%                                         ]Processing [=======================40%                                        ]Processing [========================41%                                       ]Processing [========================42%                                       ]Processing [=========================43%                                      ]Processing [==========================44%                                     ]Processing [==========================45%                                     ]Processing [===========================46%                                    ]Processing [============================47%                                   ]Processing [============================48%                                   ]Processing [=============================49%                                  ]Processing [==============================50%                                 ]Processing [==============================51%                                 ]Processing [===============================52%                                ]Processing [===============================53%                                ]Processing [================================54%                               ]Processing [=================================55%                              ]Processing [=================================56%                              ]Processing [==================================57%                             ]Processing [===================================58%                            ]Processing [===================================59%                            ]Processing [====================================60%                           ]Processing [=====================================61%                          ]Processing [=====================================62%                          ]Processing [======================================63%                         ]Processing [=======================================64%                        ]Processing [=======================================65%                        ]Processing [========================================66%                       ]Processing [=========================================67%                      ]Processing [=========================================68%                      ]Processing [==========================================69%                     ]Processing [===========================================70%                    ]Processing [===========================================71%                    ]Processing [============================================72%                   ]Processing [=============================================73%                  ]Processing [=============================================74%                  ]Processing [==============================================75%                 ]Processing [==============================================================100%]
-Saved report file to "/tmp/nsys-report-f44f-acd9-d848-05b6.qdrep"
-Exporting 424597 events: [1%                                                  ]Exporting 424597 events: [2%                                                  ]Exporting 424597 events: [3%                                                  ]Exporting 424597 events: [4%                                                  ]Exporting 424597 events: [5%                                                  ]Exporting 424597 events: [=6%                                                 ]Exporting 424597 events: [=7%                                                 ]Exporting 424597 events: [==8%                                                ]Exporting 424597 events: [==9%                                                ]Exporting 424597 events: [==10%                                               ]Exporting 424597 events: [==11%                                               ]Exporting 424597 events: [===12%                                              ]Exporting 424597 events: [===13%                                              ]Exporting 424597 events: [====14%                                             ]Exporting 424597 events: [====15%                                             ]Exporting 424597 events: [=====16%                                            ]Exporting 424597 events: [=====17%                                            ]Exporting 424597 events: [======18%                                           ]Exporting 424597 events: [======19%                                           ]Exporting 424597 events: [=======20%                                          ]Exporting 424597 events: [=======21%                                          ]Exporting 424597 events: [========22%                                         ]Exporting 424597 events: [========23%                                         ]Exporting 424597 events: [=========24%                                        ]Exporting 424597 events: [==========25%                                       ]Exporting 424597 events: [==========26%                                       ]Exporting 424597 events: [===========27%                                      ]Exporting 424597 events: [===========28%                                      ]Exporting 424597 events: [============29%                                     ]Exporting 424597 events: [============30%                                     ]Exporting 424597 events: [=============31%                                    ]Exporting 424597 events: [=============32%                                    ]Exporting 424597 events: [==============33%                                   ]Exporting 424597 events: [==============34%                                   ]Exporting 424597 events: [===============35%                                  ]Exporting 424597 events: [===============36%                                  ]Exporting 424597 events: [================37%                                 ]Exporting 424597 events: [================38%                                 ]Exporting 424597 events: [=================39%                                ]Exporting 424597 events: [=================40%                                ]Exporting 424597 events: [==================41%                               ]Exporting 424597 events: [==================42%                               ]Exporting 424597 events: [===================43%                              ]Exporting 424597 events: [===================44%                              ]Exporting 424597 events: [====================45%                             ]Exporting 424597 events: [====================46%                             ]Exporting 424597 events: [=====================47%                            ]Exporting 424597 events: [=====================48%                            ]Exporting 424597 events: [======================49%                           ]Exporting 424597 events: [=======================50%                          ]Exporting 424597 events: [=======================51%                          ]Exporting 424597 events: [========================52%                         ]Exporting 424597 events: [========================53%                         ]Exporting 424597 events: [=========================54%                        ]Exporting 424597 events: [=========================55%                        ]Exporting 424597 events: [==========================56%                       ]Exporting 424597 events: [==========================57%                       ]Exporting 424597 events: [===========================58%                      ]Exporting 424597 events: [===========================59%                      ]Exporting 424597 events: [============================60%                     ]Exporting 424597 events: [============================61%                     ]Exporting 424597 events: [=============================62%                    ]Exporting 424597 events: [=============================63%                    ]Exporting 424597 events: [==============================64%                   ]Exporting 424597 events: [==============================65%                   ]Exporting 424597 events: [===============================66%                  ]Exporting 424597 events: [===============================67%                  ]Exporting 424597 events: [================================68%                 ]Exporting 424597 events: [================================69%                 ]Exporting 424597 events: [=================================70%                ]Exporting 424597 events: [=================================71%                ]Exporting 424597 events: [==================================72%               ]Exporting 424597 events: [==================================73%               ]Exporting 424597 events: [===================================74%              ]Exporting 424597 events: [====================================75%             ]Exporting 424597 events: [====================================76%             ]Exporting 424597 events: [=====================================77%            ]Exporting 424597 events: [=====================================78%            ]Exporting 424597 events: [======================================79%           ]Exporting 424597 events: [======================================80%           ]Exporting 424597 events: [=======================================81%          ]Exporting 424597 events: [=======================================82%          ]Exporting 424597 events: [========================================83%         ]Exporting 424597 events: [========================================84%         ]Exporting 424597 events: [=========================================85%        ]Exporting 424597 events: [=========================================86%        ]Exporting 424597 events: [==========================================87%       ]Exporting 424597 events: [==========================================88%       ]Exporting 424597 events: [===========================================89%      ]Exporting 424597 events: [===========================================90%      ]Exporting 424597 events: [============================================91%     ]Exporting 424597 events: [============================================92%     ]Exporting 424597 events: [=============================================93%    ]Exporting 424597 events: [=============================================94%    ]Exporting 424597 events: [==============================================95%   ]Exporting 424597 events: [==============================================96%   ]Exporting 424597 events: [===============================================97%  ]Exporting 424597 events: [===============================================98%  ]Exporting 424597 events: [================================================99% ]Exporting 424597 events: [================================================100%]
-
-Exported successfully to
-/tmp/nsys-report-f44f-acd9-d848-05b6.sqlite
-Report file moved to "/home/alumnos/capmc/capmc-13/Escritorio/Pràctica/FFNN-SourceCode/report11.qdrep"
-Report file moved to "/home/alumnos/capmc/capmc-13/Escritorio/Pràctica/FFNN-SourceCode/report11.sqlite"
-

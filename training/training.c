@@ -23,7 +23,7 @@
  * @param i Índex de l'element del conjunt d'entrenament que farem servir.
  **/
 void feed_input(int i) {
-    #pragma acc parallel loop present(lay, input)
+    #pragma acc parallel loop present(lay, input) async(1)
     for (int j = 0; j < num_neurons[0]; j++)
         lay[0].actv[j] = input[i][j];
 }
@@ -48,23 +48,29 @@ void feed_input(int i) {
  *
  */
 void forward_prop() {
+    #pragma acc data present(lay, num_neurons)
+    {   
+        #pragma acc parallel 
+        {
+            for (int i = 1; i < num_layers; i++) {
+                #pragma acc loop 
+                for (int j = 0; j < num_neurons[i]; j++) {
+                    lay[i].z[j] = lay[i].bias[j];
+                    for (int k = 0; k < num_neurons[i - 1]; k++)
+                        lay[i].z[j] +=
+                            ((lay[i - 1].out_weights[j * num_neurons[i - 1] + k]) *
+                            (lay[i - 1].actv[k]));
 
-    for (int i = 1; i < num_layers; i++) {
-        #pragma acc parallel loop present(lay, num_neurons)
-        for (int j = 0; j < num_neurons[i]; j++) {
-            lay[i].z[j] = lay[i].bias[j];
-            for (int k = 0; k < num_neurons[i - 1]; k++)
-                lay[i].z[j] +=
-                    ((lay[i - 1].out_weights[j * num_neurons[i - 1] + k]) *
-                     (lay[i - 1].actv[k]));
-
-            if (i < num_layers - 1)  // Relu Activation Function for Hidden Layers
-                lay[i].actv[j] = ((lay[i].z[j]) < 0) ? 0 : lay[i].z[j];
-            else  // Sigmoid Activation Function for Output Layer
-                lay[i].actv[j] = 1 / (1 + exp(-lay[i].z[j]));
+                    if (i < num_layers - 1)  // Relu Activation Function for Hidden Layers
+                        lay[i].actv[j] = ((lay[i].z[j]) < 0) ? 0 : lay[i].z[j];
+                    else  // Sigmoid Activation Function for Output Layer
+                        lay[i].actv[j] = 1 / (1 + exp(-lay[i].z[j]));
+                }
+            }
         }
     }
 }
+
 
 /**
  * @brief Calcula el gradient que es necessari aplicar als pesos de les
@@ -90,52 +96,61 @@ void back_prop(int p) {
 
     #pragma acc data present(lay, num_neurons, desired_outputs)
     {
-        #pragma acc parallel
-        {   
-            // Output Layer
-            #pragma acc loop 
-            for (int j = 0; j < num_neurons[num_layers - 1]; j++) {
-                lay[num_layers - 1].dz[j] =
-                    (lay[num_layers - 1].actv[j] - desired_outputs[p][j]) *
-                    (lay[num_layers - 1].actv[j]) * (1 - lay[num_layers - 1].actv[j]);
-                lay[num_layers - 1].dbias[j] = lay[num_layers - 1].dz[j];
-            }
-
-            for (int j = 0; j < num_neurons[num_layers - 1]; j++) {
-                #pragma acc loop 
-                for (int k = 0; k < num_neurons[num_layers - 2]; k++) {
-                    lay[num_layers - 2].dw[j * num_neurons[num_layers - 2] + k] =
-                        (lay[num_layers - 1].dz[j] * lay[num_layers - 2].actv[k]);
-                    lay[num_layers - 2].dactv[k] =
-                        lay[num_layers - 2]
-                            .out_weights[j * num_neurons[num_layers - 2] + k] *
-                        lay[num_layers - 1].dz[j];
-                }
-            }
-
-            // Hidden Layers
-            for (int i = num_layers - 2; i > 0; i--) {
-                #pragma acc loop
-                for (int j = 0; j < num_neurons[i]; j++) {
-                    lay[i].dz[j] = (lay[i].z[j] >= 0) ? lay[i].dactv[j] : 0;
-
-                    for (int k = 0; k < num_neurons[i - 1]; k++) {
-                        lay[i - 1].dw[j * num_neurons[i - 1] + k] =
-                            lay[i].dz[j] * lay[i - 1].actv[k];
-
-                        if (i > 1)
-                            lay[i - 1].dactv[k] =
-                                lay[i - 1].out_weights[j * num_neurons[i - 1] + k] *
-                                lay[i].dz[j];
-                    }
-                    lay[i].dbias[j] = lay[i].dz[j];
-                }
-            }
-
+        // Output Layer
+        #pragma acc parallel loop async(1)
+        for (int j = 0; j < num_neurons[num_layers - 1]; j++) {
+            lay[num_layers - 1].dz[j] =
+                (lay[num_layers - 1].actv[j] - desired_outputs[p][j]) *
+                (lay[num_layers - 1].actv[j]) * (1 - lay[num_layers - 1].actv[j]);
+            lay[num_layers - 1].dbias[j] = lay[num_layers - 1].dz[j];
         }
-    }
 
+        #pragma acc parallel loop async(1)
+        for (int k = 0; k < num_neurons[num_layers - 2]; k++) lay[num_layers - 2].dactv[k] = 0.0;
+
+        #pragma acc parallel loop collapse(2) async(1)
+        for (int j = 0; j < num_neurons[num_layers - 1]; j++) {
+            for (int k = 0; k < num_neurons[num_layers - 2]; k++) {
+                lay[num_layers - 2].dw[j * num_neurons[num_layers - 2] + k] =
+                    (lay[num_layers - 1].dz[j] * lay[num_layers - 2].actv[k]);
+
+                #pragma acc atomic update
+                lay[num_layers - 2].dactv[k] +=
+                    lay[num_layers - 2]
+                        .out_weights[j * num_neurons[num_layers - 2] + k] *
+                    lay[num_layers - 1].dz[j];
+            }
+        }
+        
+        // Hidden Layers
+
+        for (int i = num_layers - 2; i > 0; i--) {
+            if (i > 1) {
+                #pragma acc parallel loop async(1)
+                for (int k = 0; k < num_neurons[i - 1]; k++) {
+                    lay[i - 1].dactv[k] = 0.0;
+                }
+            }
+            #pragma acc parallel loop async(1)
+            for (int j = 0; j < num_neurons[i]; j++) {
+                lay[i].dz[j] = (lay[i].z[j] >= 0) ? lay[i].dactv[j] : 0;
+
+                #pragma acc loop 
+                for (int k = 0; k < num_neurons[i - 1]; k++) {
+                    lay[i - 1].dw[j * num_neurons[i - 1] + k] = lay[i].dz[j] * lay[i - 1].actv[k];
+
+                    if (i > 1) {
+                        #pragma acc atomic update
+                        lay[i - 1].dactv[k] += lay[i - 1].out_weights[j * num_neurons[i - 1] + k] * lay[i].dz[j];
+                    }
+                }
+                lay[i].dbias[j] = lay[i].dz[j];
+            }
+        }
+
+    }
 }
+
 
 /**
  * @brief Actualitza els vectors de pesos (out_weights) i de biax (bias) de cada
@@ -147,10 +162,10 @@ void back_prop(int p) {
 
 void update_weights(void) {
     
-    #pragma acc parallel present(lay, num_neurons, alpha)
-    {
+    #pragma acc parallel present(lay, num_neurons, alpha) async(1)
+    {   
         for (int i = 0; i < num_layers - 1; i++) {
-            #pragma acc loop collapse(2)
+            #pragma acc loop collapse(2) 
             for (int j = 0; j < num_neurons[i + 1]; j++) {
                 for (int k = 0; k < num_neurons[i]; k++)
                     lay[i].out_weights[j * num_neurons[i] + k] -=
@@ -163,6 +178,3 @@ void update_weights(void) {
         }
     }
 }
-
-
-
