@@ -13,12 +13,18 @@
  */
 
 #include "main.h"
+
+#include <mpi.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+
+
+int rank;
+int num_procs;
 
 //-----------FREE INPUT------------
 void freeInput(int np, char** input) {
@@ -65,7 +71,6 @@ void printRecognized(int p, layer Output) {
  */
 void train_neural_net() {
     printf("\nTraining...\n");
-    fflush(stdout);
 
     if ((input = loadPatternSet(num_training_patterns, dataset_training_path,
                                 1)) == NULL) {
@@ -73,20 +78,11 @@ void train_neural_net() {
         exit(-1);
     }
 
-    #pragma acc enter data copyin(input[0:num_training_patterns][0:num_neurons[0]])
-    #pragma acc enter data copyin(desired_outputs[0:num_training_patterns][0:num_neurons[num_layers - 1]])
-
     int ranpat[num_training_patterns];
 
-    // printf("Entrem gradient descent: cada epoch (%d) fa %d iteracions de les funcions de training.c\n", num_epochs, num_training_patterns);
-    // fflush(stdout);
-
-    // Gradient Descent 
+    // Gradient Descent
     for (int it = 0; it < num_epochs; it++) {
         // Train patterns randomly
-
-        // printf("Epoch %d de %d.\n", it, num_epochs);
-        // fflush(stdout);
         for (int p = 0; p < num_training_patterns; p++)
             ranpat[p] = p;
 
@@ -98,21 +94,43 @@ void train_neural_net() {
             ranpat[np] = op;
         }
 
-        for (int i = 0; i < num_training_patterns; i++) {
-            int p = ranpat[i];
+        for (int i = 0; i < num_training_patterns; i += num_procs) {
 
-            feed_input(p);
-            // printf("feed_input...\n");
-            // fflush(stdout);
-            forward_prop();
-            // printf("forward_prop...\n");
-            // fflush(stdout);
-            back_prop(p);
-            // printf("back_prop...\n");
-            // fflush(stdout);
-            update_weights();
-            // printf("update_weights...\n");
-            // fflush(stdout);
+            int idx = i + rank;
+
+            if (idx < num_training_patterns) {
+                int p = ranpat[idx];
+                feed_input(p);
+                forward_prop();
+                back_prop(p);
+                update_weights();
+            }
+
+            // Mitjana de pesos
+            for (int l = 0; l < num_layers - 1; l++) {
+
+                int w_size = lay[l].num_neu * lay[l + 1].num_neu;
+
+                MPI_Allreduce(MPI_IN_PLACE,
+                            lay[l].out_weights,
+                            w_size,
+                            MPI_FLOAT,
+                            MPI_SUM,
+                            MPI_COMM_WORLD);
+
+                for (int k = 0; k < w_size; k++)
+                    lay[l].out_weights[k] /= num_procs;
+
+                MPI_Allreduce(MPI_IN_PLACE,
+                            lay[l].bias,
+                            lay[l].num_neu,
+                            MPI_FLOAT,
+                            MPI_SUM,
+                            MPI_COMM_WORLD);
+
+                for (int k = 0; k < lay[l].num_neu; k++)
+                    lay[l].bias[k] /= num_procs;
+            }
         }
     }
     freeInput(num_training_patterns, input);
@@ -123,40 +141,34 @@ void test_nn() {
     char** rSet;
 
     printf("\nTesting...\n");
-    fflush(stdout);
 
-    if ((rSet = loadPatternSet(num_test_patterns, dataset_test_path, 0)) == NULL) {
+    if ((rSet = loadPatternSet(num_test_patterns, dataset_test_path, 0)) ==
+        NULL) {
         printf("Error!!\n");
         exit(-1);
     }
 
     for (int i = 0; i < num_test_patterns; i++) {
-        for (int j = 0; j < num_neurons[0]; j++){
+        for (int j = 0; j < num_neurons[0]; j++)
             lay[0].actv[j] = rSet[i][j];
-        }
-        #pragma acc update device(lay[0].actv[0:num_neurons[0]])
 
         forward_prop();
-
-        #pragma acc update host(lay[num_layers - 1].actv[0:num_neurons[num_layers - 1]])
-
         printRecognized(i, lay[num_layers - 1]);
     }
 
-
     printf("\nTotal encerts = %d\n", total);
-    fflush(stdout);
-
     freeInput(num_test_patterns, rSet);
 }
 
 //-----------MAIN-----------//
 int main(int argc, char** argv) {
-    // printf("main\n");
-    // fflush(stdout);
-
     if (debug == 1)
         printf("argc = %d \n", argc);
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+
     if (argc <= 1)
         readConfiguration("configuration/configfile.txt");
     else
@@ -171,32 +183,6 @@ int main(int argc, char** argv) {
         exit(0);
     }
 
-    // Després de inicialitzar les dades de la xarxa, copiem tot a la GPU
-
-    // Copiem num_neurons
-    // Copiem lay (array d'estructures de la xarxa)
-    #pragma acc enter data copyin(num_layers, alpha)
-    #pragma acc enter data copyin(num_neurons[0:num_layers])
-    #pragma acc enter data copyin(lay[0:num_layers])
-
-    for (int i = 0; i < num_layers; i++) {
-        // printf("iteracio %d de %d\n", i+1, num_layers);
-        // fflush(stdout);
-        #pragma acc enter data copyin(lay[i].actv[0:num_neurons[i]])
-        #pragma acc enter data copyin(lay[i].z[0:num_neurons[i]])
-        #pragma acc enter data copyin(lay[i].dz[0:num_neurons[i]])
-        #pragma acc enter data copyin(lay[i].bias[0:num_neurons[i]])
-        #pragma acc enter data copyin(lay[i].dbias[0:num_neurons[i]])
-        #pragma acc enter data copyin(lay[i].dactv[0:num_neurons[i]])
-        if (i < num_layers - 1) {
-            #pragma acc enter data copyin(lay[i].out_weights[0:num_neurons[i]*num_neurons[i+1]])
-            #pragma acc enter data copyin(lay[i].dw[0:num_neurons[i]*num_neurons[i+1]])
-        }
-    }
-
-    // printf("done\n");
-    // fflush(stdout);
-
     if (debug == 1)
         printf("COST MALLOC \n");
 
@@ -208,9 +194,6 @@ int main(int argc, char** argv) {
 
     // Train
     train_neural_net();
-
-    // printf("Acabat train\n");
-    // fflush(stdout);
 
     // Test
     test_nn();
@@ -228,6 +211,7 @@ int main(int argc, char** argv) {
 
     printf("\n\nGoodbye! (%f sec)\n\n", elapsed);
 
+    MPI_Finalize();
+    
     return 0;
 }
-

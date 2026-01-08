@@ -1,0 +1,29 @@
+#!/bin/bash
+#SBATCH --job-name=FFNN_MPI
+#SBATCH --ntasks=8
+#SBATCH --partition=nodo.q
+
+module purge
+module load openmpi/4.1.1
+module load gcc/12.2.1
+
+echo "Compiling..."
+mpicc -O3 \
+    main.c \
+    common/common.c \
+    configuration/config.c \
+    layer/layer.c \
+    randomizer/randomizer.c \
+    initialize/initialize.c \
+    training/training.c \
+    -o exec -lm
+
+if [ $? -ne 0 ]; then
+    echo "Compilation failed"
+    exit 1
+fi
+
+echo "Running MPI program..."
+mpirun -np $SLURM_NTASKS ./exec configuration/configfile.txt
+
+echo "Done."
