@@ -46,7 +46,7 @@ void printRecognized(int p, layer Output) {
 
     if (debug == 1) {
         printf("El patró %d sembla un %c\t i és un %d", p, '0' + imax,
-               Validation[p]);
+            Validation[p]);
         for (int k = 0; k < num_out_layer; k++)
             printf("\t%f\t", Output.actv[k]);
         printf("\n");
@@ -70,7 +70,7 @@ void printRecognized(int p, layer Output) {
  *
  */
 void train_neural_net() {
-    printf("\nTraining...\n");
+    if (rank == 0) printf("\nTraining...\n");
 
     if ((input = loadPatternSet(num_training_patterns, dataset_training_path,
                                 1)) == NULL) {
@@ -83,69 +83,104 @@ void train_neural_net() {
     // Gradient Descent
     for (int it = 0; it < num_epochs; it++) {
         // Train patterns randomly
-        for (int p = 0; p < num_training_patterns; p++)
-            ranpat[p] = p;
 
-        for (int p = 0; p < num_training_patterns; p++) {
-            int x = rando();
-            int np = (x * x) % num_training_patterns;
-            int op = ranpat[p];
-            ranpat[p] = ranpat[np];
-            ranpat[np] = op;
+        double t_epoch_start = MPI_Wtime();
+
+        if (rank == 0) {
+            for (int p = 0; p < num_training_patterns; p++)
+                ranpat[p] = p;
+
+            for (int p = 0; p < num_training_patterns; p++) {
+                int x = rando();
+                int np = (x * x) % num_training_patterns;
+                int tmp = ranpat[p];
+                ranpat[p] = ranpat[np];
+                ranpat[np] = tmp;
+            }
         }
 
-        for (int i = 0; i < num_training_patterns; i += num_procs) {
+        MPI_Bcast(ranpat, num_training_patterns, MPI_INT, 0, MPI_COMM_WORLD);
 
-            int idx = i + rank;
+        int base  = num_training_patterns / num_procs;
+        int extra = num_training_patterns % num_procs;
 
-            if (idx < num_training_patterns) {
-                int p = ranpat[idx];
-                feed_input(p);
-                forward_prop();
-                back_prop(p);
-                update_weights();
-            }
+        int from, to;
 
-            // Mitjana de pesos
-            for (int l = 0; l < num_layers - 1; l++) {
+        if (rank < extra) {
+            from = rank * (base + 1);
+            to   = from + base + 1;
+        } else {
+            from = rank * base + extra;
+            to   = from + base;
+        }
 
-                int w_size = lay[l].num_neu * lay[l + 1].num_neu;
+        for (int i = from; i < to; i++) {
+            int p = ranpat[i];
+            feed_input(p);
+            forward_prop();
+            back_prop(p);
+            update_weights();
+        }
 
-                MPI_Allreduce(MPI_IN_PLACE,
-                            lay[l].out_weights,
-                            w_size,
-                            MPI_FLOAT,
-                            MPI_SUM,
-                            MPI_COMM_WORLD);
+        for (int l = 0; l < num_layers - 1; l++) {
 
-                for (int k = 0; k < w_size; k++)
-                    lay[l].out_weights[k] /= num_procs;
+            int w_size = lay[l].num_neu * lay[l + 1].num_neu;
 
-                MPI_Allreduce(MPI_IN_PLACE,
-                            lay[l].bias,
-                            lay[l].num_neu,
-                            MPI_FLOAT,
-                            MPI_SUM,
-                            MPI_COMM_WORLD);
+            MPI_Allreduce(MPI_IN_PLACE,
+                          lay[l].out_weights,
+                          w_size,
+                          MPI_FLOAT,
+                          MPI_SUM,
+                          MPI_COMM_WORLD);
 
-                for (int k = 0; k < lay[l].num_neu; k++)
-                    lay[l].bias[k] /= num_procs;
-            }
+            for (int k = 0; k < w_size; k++)
+                lay[l].out_weights[k] /= num_procs;
+
+            MPI_Allreduce(MPI_IN_PLACE,
+                          lay[l].bias,
+                          lay[l].num_neu,
+                          MPI_FLOAT,
+                          MPI_SUM,
+                          MPI_COMM_WORLD);
+
+            for (int k = 0; k < lay[l].num_neu; k++)
+                lay[l].bias[k] /= num_procs;
+        }
+
+        double t_epoch_end = MPI_Wtime();
+
+        if (rank == 0) {
+            printf("Epoch %d time: %f seconds\n",
+                it, t_epoch_end - t_epoch_start);
         }
     }
+
     freeInput(num_training_patterns, input);
 }
 
 //-----------TEST THE TRAINED NETWORK------------
 void test_nn() {
     char** rSet;
-
-    printf("\nTesting...\n");
+    double test_time_start = MPI_Wtime();
+    if (rank == 0) printf("\nTesting...\n");
 
     if ((rSet = loadPatternSet(num_test_patterns, dataset_test_path, 0)) ==
         NULL) {
         printf("Error!!\n");
         exit(-1);
+    }
+
+    int base = num_test_patterns / num_procs;
+    int extra = num_test_patterns % num_procs;
+    int from, to;
+
+    if (rank < extra) {
+        from = rank * (base + 1);
+        to = from + base + 1;
+    } 
+    else {
+        from = rank * base + extra;
+        to = from + base;
     }
 
     for (int i = 0; i < num_test_patterns; i++) {
@@ -156,7 +191,12 @@ void test_nn() {
         printRecognized(i, lay[num_layers - 1]);
     }
 
-    printf("\nTotal encerts = %d\n", total);
+    double test_time_end = MPI_Wtime();
+    if (rank == 0) {
+        printf("Test time: %f seconds\n", test_time_end - test_time_start);
+    }
+
+    if (rank == 0) printf("\nTotal encerts = %d\n", total);
     freeInput(num_test_patterns, rSet);
 }
 
@@ -209,7 +249,7 @@ int main(int argc, char** argv) {
 
     free(cost);
 
-    printf("\n\nGoodbye! (%f sec)\n\n", elapsed);
+    if (rank == 0) printf("\n\nGoodbye! (%f sec)\n\n", elapsed);
 
     MPI_Finalize();
     

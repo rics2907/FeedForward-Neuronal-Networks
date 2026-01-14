@@ -1,0 +1,21 @@
+
+Training...
+Epoch 0 time: 0.509797 seconds
+Epoch 1 time: 0.510356 seconds
+Epoch 2 time: 0.508822 seconds
+Epoch 3 time: 0.508505 seconds
+Epoch 4 time: 0.508297 seconds
+Epoch 5 time: 0.510041 seconds
+Epoch 6 time: 0.508746 seconds
+Epoch 7 time: 0.508906 seconds
+Epoch 8 time: 0.508666 seconds
+Epoch 9 time: 0.509200 seconds
+
+Testing...
+Test time: 0.114323 seconds
+
+Total encerts = 876
+
+
+Goodbye! (5.224820 sec)
+
