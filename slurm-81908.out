@@ -1,0 +1,21 @@
+MPI amb 8 processos test no paral·lel
+Training...
+Epoch 0 time: 0.140106 seconds
+Epoch 1 time: 0.138956 seconds
+Epoch 2 time: 0.139469 seconds
+Epoch 3 time: 0.139415 seconds
+Epoch 4 time: 0.138874 seconds
+Epoch 5 time: 0.140650 seconds
+Epoch 6 time: 0.139350 seconds
+Epoch 7 time: 0.139217 seconds
+Epoch 8 time: 0.139575 seconds
+Epoch 9 time: 0.139567 seconds
+
+Testing...
+Test time: 0.219158 seconds
+
+Total encerts = 864
+
+
+Goodbye! (1.638963 sec)
+

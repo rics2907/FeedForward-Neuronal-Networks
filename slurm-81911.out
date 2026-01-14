@@ -1,0 +1,22 @@
+MPI amb 36 processos i 0 nombre d'epochs
+
+Training...
+Epoch 0 time: 0.075436 seconds
+Epoch 1 time: 0.057422 seconds
+Epoch 2 time: 0.065843 seconds
+Epoch 3 time: 0.055694 seconds
+Epoch 4 time: 0.054548 seconds
+Epoch 5 time: 0.054680 seconds
+Epoch 6 time: 0.057262 seconds
+Epoch 7 time: 0.053028 seconds
+Epoch 8 time: 0.053510 seconds
+Epoch 9 time: 0.054857 seconds
+
+Testing...
+Test time: 0.219633 seconds
+
+Total encerts = 782
+
+
+Goodbye! (0.827740 sec)
+

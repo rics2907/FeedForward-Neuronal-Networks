@@ -80,19 +80,6 @@ void train_neural_net() {
 
     int ranpat[num_training_patterns];
 
-    int base  = num_training_patterns / num_procs;
-    int extra = num_training_patterns % num_procs;
-
-    int from, to;
-
-    if (rank < extra) {
-        from = rank * (base + 1);
-        to   = from + base + 1;
-    } else {
-        from = rank * base + extra;
-        to   = from + base;
-    }
-    
     // Gradient Descent
     for (int it = 0; it < num_epochs; it++) {
         // Train patterns randomly
@@ -113,6 +100,19 @@ void train_neural_net() {
         }
 
         MPI_Bcast(ranpat, num_training_patterns, MPI_INT, 0, MPI_COMM_WORLD);
+
+        int base  = num_training_patterns / num_procs;
+        int extra = num_training_patterns % num_procs;
+
+        int from, to;
+
+        if (rank < extra) {
+            from = rank * (base + 1);
+            to   = from + base + 1;
+        } else {
+            from = rank * base + extra;
+            to   = from + base;
+        }
 
         for (int i = from; i < to; i++) {
             int p = ranpat[i];
@@ -162,30 +162,28 @@ void train_neural_net() {
 void test_nn() {
     char** rSet;
     double test_time_start = MPI_Wtime();
+    if (rank == 0) printf("\nTesting...\n");
 
-    if (rank == 0)
-        printf("\nTesting...\n");
-
-    if ((rSet = loadPatternSet(num_test_patterns, dataset_test_path, 0)) == NULL) {
-        printf("Error loading test patterns!!\n");
+    if ((rSet = loadPatternSet(num_test_patterns, dataset_test_path, 0)) ==
+        NULL) {
+        printf("Error!!\n");
         exit(-1);
     }
 
-    int base  = num_test_patterns / num_procs;
+    int base = num_test_patterns / num_procs;
     int extra = num_test_patterns % num_procs;
     int from, to;
 
     if (rank < extra) {
         from = rank * (base + 1);
-        to   = from + base + 1;
-    } else {
+        to = from + base + 1;
+    } 
+    else {
         from = rank * base + extra;
-        to   = from + base;
+        to = from + base;
     }
 
-    total = 0;
-
-    for (int i = from; i < to; i++) {
+    for (int i = 0; i < num_test_patterns; i++) {
         for (int j = 0; j < num_neurons[0]; j++)
             lay[0].actv[j] = rSet[i][j];
 
@@ -193,26 +191,14 @@ void test_nn() {
         printRecognized(i, lay[num_layers - 1]);
     }
 
-    int global_total = 0;
-    MPI_Reduce(&total,
-               &global_total,
-               1,
-               MPI_INT,
-               MPI_SUM,
-               0,
-               MPI_COMM_WORLD);
-
     double test_time_end = MPI_Wtime();
-
     if (rank == 0) {
-        printf("Test time: %f seconds\n",
-               test_time_end - test_time_start);
-        printf("\nTotal encerts = %d\n", global_total);
+        printf("Test time: %f seconds\n", test_time_end - test_time_start);
     }
 
+    if (rank == 0) printf("\nTotal encerts = %d\n", total);
     freeInput(num_test_patterns, rSet);
 }
-
 
 //-----------MAIN-----------//
 int main(int argc, char** argv) {
@@ -222,6 +208,8 @@ int main(int argc, char** argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+    
+    if (rank == 0) printf("MPI amb %d processos\n", num_procs);
 
     if (argc <= 1)
         readConfiguration("configuration/configfile.txt");

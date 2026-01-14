@@ -1,0 +1,112 @@
+MPI amb 2 processos
+
+Training...
+Epoch 0 time: 0.513815 seconds
+Epoch 1 time: 0.513914 seconds
+Epoch 2 time: 0.512772 seconds
+Epoch 3 time: 0.512399 seconds
+Epoch 4 time: 0.512141 seconds
+Epoch 5 time: 0.514531 seconds
+Epoch 6 time: 0.512973 seconds
+Epoch 7 time: 0.517271 seconds
+Epoch 8 time: 0.512136 seconds
+Epoch 9 time: 0.513066 seconds
+Epoch 10 time: 0.515374 seconds
+Epoch 11 time: 0.513288 seconds
+Epoch 12 time: 0.512838 seconds
+Epoch 13 time: 0.513467 seconds
+Epoch 14 time: 0.512859 seconds
+Epoch 15 time: 0.512691 seconds
+Epoch 16 time: 0.512620 seconds
+Epoch 17 time: 0.514482 seconds
+Epoch 18 time: 0.511692 seconds
+Epoch 19 time: 0.511776 seconds
+Epoch 20 time: 0.513533 seconds
+Epoch 21 time: 0.512189 seconds
+Epoch 22 time: 0.512789 seconds
+Epoch 23 time: 0.511711 seconds
+Epoch 24 time: 0.512489 seconds
+Epoch 25 time: 0.515520 seconds
+Epoch 26 time: 0.512806 seconds
+Epoch 27 time: 0.512759 seconds
+Epoch 28 time: 0.512157 seconds
+Epoch 29 time: 0.512390 seconds
+Epoch 30 time: 0.512201 seconds
+Epoch 31 time: 0.512560 seconds
+Epoch 32 time: 0.512362 seconds
+Epoch 33 time: 0.514628 seconds
+Epoch 34 time: 0.513343 seconds
+Epoch 35 time: 0.514228 seconds
+Epoch 36 time: 0.514668 seconds
+Epoch 37 time: 0.516018 seconds
+Epoch 38 time: 0.515236 seconds
+Epoch 39 time: 0.515371 seconds
+Epoch 40 time: 0.514860 seconds
+Epoch 41 time: 0.514602 seconds
+Epoch 42 time: 0.515499 seconds
+Epoch 43 time: 0.514118 seconds
+Epoch 44 time: 0.516145 seconds
+Epoch 45 time: 0.515546 seconds
+Epoch 46 time: 0.516086 seconds
+Epoch 47 time: 0.516353 seconds
+Epoch 48 time: 0.517224 seconds
+Epoch 49 time: 0.515874 seconds
+Epoch 50 time: 0.517880 seconds
+Epoch 51 time: 0.517271 seconds
+Epoch 52 time: 0.515435 seconds
+Epoch 53 time: 0.518148 seconds
+Epoch 54 time: 0.519917 seconds
+Epoch 55 time: 0.518523 seconds
+Epoch 56 time: 0.518293 seconds
+Epoch 57 time: 0.517453 seconds
+Epoch 58 time: 0.516261 seconds
+Epoch 59 time: 0.515577 seconds
+Epoch 60 time: 0.518788 seconds
+Epoch 61 time: 0.518294 seconds
+Epoch 62 time: 0.516128 seconds
+Epoch 63 time: 0.518327 seconds
+Epoch 64 time: 0.516609 seconds
+Epoch 65 time: 0.516867 seconds
+Epoch 66 time: 0.518490 seconds
+Epoch 67 time: 0.516525 seconds
+Epoch 68 time: 0.518964 seconds
+Epoch 69 time: 0.519201 seconds
+Epoch 70 time: 0.517568 seconds
+Epoch 71 time: 0.518430 seconds
+Epoch 72 time: 0.520118 seconds
+Epoch 73 time: 0.518316 seconds
+Epoch 74 time: 0.519654 seconds
+Epoch 75 time: 0.518269 seconds
+Epoch 76 time: 0.518377 seconds
+Epoch 77 time: 0.516030 seconds
+Epoch 78 time: 0.516019 seconds
+Epoch 79 time: 0.518796 seconds
+Epoch 80 time: 0.518236 seconds
+Epoch 81 time: 0.516073 seconds
+Epoch 82 time: 0.516658 seconds
+Epoch 83 time: 0.516003 seconds
+Epoch 84 time: 0.519004 seconds
+Epoch 85 time: 0.516300 seconds
+Epoch 86 time: 0.516060 seconds
+Epoch 87 time: 0.519463 seconds
+Epoch 88 time: 0.518034 seconds
+Epoch 89 time: 0.517997 seconds
+Epoch 90 time: 0.515384 seconds
+Epoch 91 time: 0.517917 seconds
+Epoch 92 time: 0.516690 seconds
+Epoch 93 time: 0.517706 seconds
+Epoch 94 time: 0.518810 seconds
+Epoch 95 time: 0.519047 seconds
+Epoch 96 time: 0.516058 seconds
+Epoch 97 time: 0.517973 seconds
+Epoch 98 time: 0.518483 seconds
+Epoch 99 time: 0.516791 seconds
+
+Testing...
+Test time: 0.219190 seconds
+
+Total encerts = 917
+
+
+Goodbye! (51.816637 sec)
+
